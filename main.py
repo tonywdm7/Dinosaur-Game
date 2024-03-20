@@ -1,8 +1,14 @@
 import pygame
 import random
 
-cloud_speed = 0.05
-cactus_speed = 0.05
+pygame.init()
+
+score = 0
+font = pygame.font.Font(None, 36)
+BLACK = (0, 0, 0)
+
+cloud_speed = 0.5
+cactus_speed = 0.5
 
 WIDTH, HEIGHT = 600, 200
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -11,6 +17,11 @@ dino_image = pygame.image.load("dino.png")
 cactus_image = pygame.image.load("cactus.png")
 cloud_image = pygame.image.load("cloud.png")
 gameover_image = pygame.image.load("gameover.png")
+
+button_width, button_height = gameover_image.get_width(), gameover_image.get_height()
+
+button_x = WIDTH // 2 - button_width // 2
+button_y = HEIGHT // 2 - button_height // 2
 
 cloud_x = WIDTH
 cloud_y = random.randint(0, 100)
@@ -27,7 +38,7 @@ next_cactus_time = 1
 def jump():
     global speed_y, dino_jumping
     if not dino_jumping:
-        speed_y = -0.22
+        speed_y = -2.1
         dino_jumping = True
 
 def create_cactus():
@@ -37,14 +48,39 @@ def create_cactus():
 
 create_cactus()
 
+button_show = False
+paused = False
+
+def draw_button():
+    if button_show:
+        global paused
+        screen.blit(gameover_image, (button_x, button_y))
+        paused = True
+
+def press_button():
+    global paused
+    global button_show
+    global score
+    score = 0
+    while len(cactus_list) != 0:
+        cactus_list.pop(0)
+    paused = False
+    button_show = False
+    create_cactus()
+
+button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+
 run = True
 while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE and not paused:
                 jump()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if button_rect.collidepoint(event.pos) and button_show:
+                press_button()
 
     cloud_x -= cloud_speed
     if cloud_x + cloud_image.get_width() * cloud_scale < 0:
@@ -52,19 +88,23 @@ while run:
         cloud_y = random.randint(0, 100)
         cloud_scale = random.uniform(0.5, 1.5)
 
-    for i in range(len(cactus_list)):
-        cactus_list[i][0] -= cactus_speed
-        if cactus_list[i][0] + cactus_image.get_width() < 0:
-            cactus_list.pop(i)
+    if not paused:
+        for i in range(len(cactus_list)):
+            cactus_x, cactus_y = cactus_list[i]
+            cactus_x -= cactus_speed
+            if cactus_x + cactus_image.get_width() < 0:
+                cactus_list.pop(i)
+                break
+            cactus_list[i] = (cactus_x, cactus_y)
 
     if cactus_list[-1][0] < 450:
-        next_cactus_time -= 0.01
+        next_cactus_time -= 0.1
         if next_cactus_time <= 0:
             create_cactus()
             next_cactus_time = random.randint(1, 40)
 
     dino_y += speed_y
-    speed_y += 0.0003
+    speed_y += 0.03
     if dino_y >= HEIGHT - 50:
         dino_y = HEIGHT - 50
         speed_y = 0
@@ -75,7 +115,7 @@ while run:
                 dino_x < cactus_x + cactus_image.get_width() and \
                 dino_y + dino_image.get_height() > cactus_y and \
                 dino_y < cactus_y + cactus_image.get_height():
-            run = False
+            button_show = True
 
     scaled_cloud = pygame.transform.scale(cloud_image, (int(cloud_image.get_width() * cloud_scale),
                                                         int(cloud_image.get_height() * cloud_scale)))
@@ -87,6 +127,13 @@ while run:
     for cactus in cactus_list:
         screen.blit(cactus_image, (cactus[0], cactus[1]))
 
-    pygame.display.flip()
+    if not paused:
+        score += 0.0100
+    score_rounded = int(score)
+    score_text = font.render(str(score_rounded), True, BLACK)
+    screen.blit(score_text, (20, 20))
 
-# ДЗ сделано, я частично гуглил если не понимал как делать
+    draw_button()
+
+    pygame.display.flip()
+    pygame.time.Clock().tick(1000)
