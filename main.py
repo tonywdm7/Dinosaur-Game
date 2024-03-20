@@ -117,7 +117,7 @@ while run:
             if enemy_x + enemy_image.get_width() < 0:
                 enemy_list.pop(enemy_list.index(enemy))
                 break
-            enemy_list[enemy_list.index(enemy)] = (enemy_x, enemy_y)
+            enemy_list[i] = (enemy_x, enemy_y)
 
     ###
 
