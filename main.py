@@ -53,7 +53,7 @@ def create_cactus():
 def create_enemy():
     enemy_x = WIDTH
     enemy_y = HEIGHT - 50
-    cactus_list.append([enemy_x, enemy_y])
+    enemy_list.append([enemy_x, enemy_y])
 
 
 
@@ -76,7 +76,7 @@ def press_button():
     score = 0
     while len(cactus_list) != 0:
         cactus_list.pop(0)
-    while len(enemy_list) != 0:  # Clear enemy_list
+    while len(enemy_list) != 0:  #
         enemy_list.pop(0)
     paused = False
     button_show = False
@@ -111,7 +111,7 @@ while run:
                 break
             cactus_list[i] = (cactus_x, cactus_y)
 
-        for enemy in enemy_list:  # Changed from cactus_list to enemy_list
+        for enemy in enemy_list:  #
             enemy_x, enemy_y = enemy
             enemy_x -= enemy_speed
             if enemy_x + enemy_image.get_width() < 0:
@@ -121,13 +121,13 @@ while run:
 
     ###
 
-    if cactus_list[-1][0] < 450:
+    if cactus_list[-1][0] < WIDTH - 450:
         next_cactus_time -= 0.1
         if next_cactus_time <= 0:
             create_cactus()
             next_cactus_time = random.randint(1, 40)
 
-    if enemy_list[-1][0] < 450:
+    if enemy_list[-1][0] < WIDTH - 450:
         next_enemy_time -= 0.1
         if next_enemy_time <= 0:
             create_enemy()
