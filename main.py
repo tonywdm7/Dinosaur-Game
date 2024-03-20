@@ -9,6 +9,7 @@ BLACK = (0, 0, 0)
 
 cloud_speed = 0.5
 cactus_speed = 0.5
+enemy_speed = 0.5
 
 WIDTH, HEIGHT = 600, 200
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -17,6 +18,7 @@ dino_image = pygame.image.load("dino.png")
 cactus_image = pygame.image.load("cactus.png")
 cloud_image = pygame.image.load("cloud.png")
 gameover_image = pygame.image.load("gameover.png")
+enemy_image = pygame.image.load("enemy.png")
 
 button_width, button_height = gameover_image.get_width(), gameover_image.get_height()
 
@@ -33,6 +35,8 @@ speed_y = 0
 dino_jumping = False
 
 cactus_list = []
+enemy_list = []
+next_enemy_time = 1
 next_cactus_time = 1
 
 def jump():
@@ -46,7 +50,15 @@ def create_cactus():
     cactus_y = HEIGHT - 50
     cactus_list.append([cactus_x, cactus_y])
 
+def create_enemy():
+    enemy_x = WIDTH
+    enemy_y = HEIGHT - 50
+    cactus_list.append([enemy_x, enemy_y])
+
+
+
 create_cactus()
+create_enemy()
 
 button_show = False
 paused = False
@@ -64,6 +76,8 @@ def press_button():
     score = 0
     while len(cactus_list) != 0:
         cactus_list.pop(0)
+    while len(enemy_list) != 0:  # Clear enemy_list
+        enemy_list.pop(0)
     paused = False
     button_show = False
     create_cactus()
@@ -97,11 +111,27 @@ while run:
                 break
             cactus_list[i] = (cactus_x, cactus_y)
 
+        for enemy in enemy_list:  # Changed from cactus_list to enemy_list
+            enemy_x, enemy_y = enemy
+            enemy_x -= enemy_speed
+            if enemy_x + enemy_image.get_width() < 0:
+                enemy_list.pop(enemy_list.index(enemy))
+                break
+            enemy_list[enemy_list.index(enemy)] = (enemy_x, enemy_y)
+
+    ###
+
     if cactus_list[-1][0] < 450:
         next_cactus_time -= 0.1
         if next_cactus_time <= 0:
             create_cactus()
             next_cactus_time = random.randint(1, 40)
+
+    if enemy_list[-1][0] < 450:
+        next_enemy_time -= 0.1
+        if next_enemy_time <= 0:
+            create_enemy()
+            next_enemy_time = random.randint(1, 40)
 
     dino_y += speed_y
     speed_y += 0.03
@@ -117,6 +147,13 @@ while run:
                 dino_y < cactus_y + cactus_image.get_height():
             button_show = True
 
+    for enemy_x, enemy_y in enemy_list:
+        if dino_x + dino_image.get_width() > enemy_x and \
+                dino_x < enemy_x + enemy_image.get_width() and \
+                dino_y + dino_image.get_height() > enemy_y and \
+                dino_y < enemy_y + enemy_image.get_height():
+            button_show = True
+
     scaled_cloud = pygame.transform.scale(cloud_image, (int(cloud_image.get_width() * cloud_scale),
                                                         int(cloud_image.get_height() * cloud_scale)))
 
@@ -126,6 +163,9 @@ while run:
 
     for cactus in cactus_list:
         screen.blit(cactus_image, (cactus[0], cactus[1]))
+
+    for enemy in enemy_list:
+        screen.blit(enemy_image, (enemy[0], enemy[1]))
 
     if not paused:
         score += 0.0100
